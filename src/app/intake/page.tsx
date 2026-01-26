@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { IntakeForm } from "@/components/intake";
 
 export const metadata = {
@@ -5,6 +6,17 @@ export const metadata = {
   description:
     "Complete our free assessment to get matched with independent buyers' agents in the Netherlands. Takes 3 minutes, no obligation.",
 };
+
+function IntakeFormLoading() {
+  return (
+    <div className="max-w-2xl mx-auto">
+      <div className="animate-pulse space-y-4">
+        <div className="h-2 bg-muted rounded w-full" />
+        <div className="h-64 bg-muted rounded" />
+      </div>
+    </div>
+  );
+}
 
 export default function IntakePage() {
   return (
@@ -16,7 +28,9 @@ export default function IntakePage() {
           local experts who can help.
         </p>
       </div>
-      <IntakeForm />
+      <Suspense fallback={<IntakeFormLoading />}>
+        <IntakeForm />
+      </Suspense>
     </main>
   );
 }
