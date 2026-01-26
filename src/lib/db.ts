@@ -2,10 +2,12 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 
-// Lazy initialization to avoid build-time errors
+// Check if we're in build mode (no database needed)
+const isBuildTime = process.env.NODE_ENV === "production" && !process.env.POSTGRES_URL;
+
 let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
-function getDb() {
+function getDb(): ReturnType<typeof drizzle<typeof schema>> {
   if (_db) return _db;
 
   const connectionString = process.env.POSTGRES_URL;
@@ -18,9 +20,11 @@ function getDb() {
   return _db;
 }
 
-// Export a proxy that lazily initializes the database
-export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
-  get(_target, prop) {
-    return getDb()[prop as keyof typeof _db];
-  },
-});
+// Export db - at build time returns a dummy, at runtime returns real db
+export const db: ReturnType<typeof drizzle<typeof schema>> = isBuildTime
+  ? ({} as ReturnType<typeof drizzle<typeof schema>>)
+  : new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
+      get(_target, prop) {
+        return getDb()[prop as keyof ReturnType<typeof drizzle<typeof schema>>];
+      },
+    });
