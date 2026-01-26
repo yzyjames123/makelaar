@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, index, uuid } from "drizzle-orm/pg-core";
 
 // IMPORTANT! ID fields should ALWAYS use UUID types, EXCEPT the BetterAuth tables.
 
@@ -80,3 +80,46 @@ export const verification = pgTable("verification", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+
+// Intake profiles for expat home buyers
+export const intakeProfiles = pgTable(
+  "intake_profiles",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // Core fields (required for quick intake)
+    email: text("email").notNull(),
+    preferredRegions: text("preferred_regions").array().notNull(),
+    budgetRange: text("budget_range").notNull(),
+    purchaseTimeline: text("purchase_timeline").notNull(),
+    consentToShare: boolean("consent_to_share").notNull(),
+    marketingConsent: boolean("marketing_consent").default(false),
+    // Deferred fields (now nullable for quick intake)
+    firstName: text("first_name"),
+    lastName: text("last_name"),
+    phone: text("phone"),
+    nationality: text("nationality"),
+    currentLocation: text("current_location"),
+    expectedMoveDate: text("expected_move_date"),
+    employmentType: text("employment_type"),
+    annualIncome: text("annual_income"),
+    hasPartner: boolean("has_partner"),
+    partnerEmploymentType: text("partner_employment_type"),
+    partnerIncome: text("partner_income"),
+    hasSavings: boolean("has_savings"),
+    propertyTypes: text("property_types").array(),
+    hasStartedViewing: boolean("has_started_viewing"),
+    hasMortgageAdvisor: text("has_mortgage_advisor"),
+    // Metadata
+    intakeType: text("intake_type").default("quick").notNull(), // 'quick' or 'full'
+    status: text("status").default("pending").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("intake_profiles_email_idx").on(table.email),
+    index("intake_profiles_status_idx").on(table.status),
+  ]
+);
