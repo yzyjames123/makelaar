@@ -2,29 +2,14 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 
-// Check if we're in build mode (no database needed)
-const isBuildTime = process.env.NODE_ENV === "production" && !process.env.POSTGRES_URL;
+// Use dummy URL during build to prevent errors (won't actually connect)
+const connectionString = process.env.POSTGRES_URL || "postgresql://build:build@localhost:5432/build";
 
-let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
+const client = postgres(connectionString, {
+  // Don't actually connect during build
+  max: process.env.POSTGRES_URL ? 10 : 0,
+  idle_timeout: 20,
+  connect_timeout: 10,
+});
 
-function getDb(): ReturnType<typeof drizzle<typeof schema>> {
-  if (_db) return _db;
-
-  const connectionString = process.env.POSTGRES_URL;
-  if (!connectionString) {
-    throw new Error("POSTGRES_URL environment variable is not set");
-  }
-
-  const client = postgres(connectionString);
-  _db = drizzle(client, { schema });
-  return _db;
-}
-
-// Export db - at build time returns a dummy, at runtime returns real db
-export const db: ReturnType<typeof drizzle<typeof schema>> = isBuildTime
-  ? ({} as ReturnType<typeof drizzle<typeof schema>>)
-  : new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
-      get(_target, prop) {
-        return getDb()[prop as keyof ReturnType<typeof drizzle<typeof schema>>];
-      },
-    });
+export const db = drizzle(client, { schema });
