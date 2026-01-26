@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { AlertCircle } from "lucide-react";
 import { ProgressBar } from "./progress-bar";
 import { StepRegionBudget } from "./step-region-budget";
 import { StepTimelineConsent } from "./step-timeline-consent";
@@ -32,6 +33,7 @@ export function IntakeForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<QuickIntakeFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Pre-fill from URL params (from hero form)
   useEffect(() => {
@@ -49,6 +51,7 @@ export function IntakeForm() {
 
   const updateFormData = (updates: Partial<QuickIntakeFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
+    if (error) setError(null);
   };
 
   const nextStep = () => {
@@ -67,6 +70,7 @@ export function IntakeForm() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    setError(null);
     try {
       const response = await fetch("/api/intake", {
         method: "POST",
@@ -80,10 +84,12 @@ export function IntakeForm() {
       if (response.ok) {
         router.push("/intake/confirmation");
       } else {
-        console.error("Failed to submit form");
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || "Failed to submit form. Please try again.";
+        setError(errorMessage);
       }
-    } catch (error) {
-      console.error("Error submitting form:", error);
+    } catch {
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -92,6 +98,13 @@ export function IntakeForm() {
   return (
     <div className="max-w-2xl mx-auto">
       <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+
+      {error && (
+        <div className="mb-6 flex items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
       {currentStep === 1 && (
         <StepRegionBudget

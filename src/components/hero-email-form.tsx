@@ -37,7 +37,7 @@ export function HeroEmailForm() {
       email: email.trim(),
       regions: selectedRegions.join(","),
     });
-    router.push(`/intake?${params.toString()}`);
+    router.push(`/onboarding?${params.toString()}`);
   };
 
   const isValid = email.trim() && selectedRegions.length > 0;
