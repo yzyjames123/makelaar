@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -16,38 +16,44 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const jakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["600", "700"],
+});
+
 export const metadata: Metadata = {
   title: {
-    default: "Agentic Coding Boilerplate",
-    template: "%s | Agentic Coding Boilerplate",
+    default: "Makelaar Match | Find Your Dutch Home",
+    template: "%s | Makelaar Match",
   },
   description:
-    "Complete agentic coding boilerplate with authentication, database, AI integration, and modern tooling - perfect for building AI-powered applications and autonomous agents by Leon van Zyl",
+    "The expat-first platform for buying your Dutch home. Connect with vetted local buyers' agents, use free financial tools, and navigate the Dutch housing market in English.",
   keywords: [
-    "Next.js",
-    "React",
-    "TypeScript",
-    "AI",
-    "OpenRouter",
-    "Boilerplate",
-    "Authentication",
-    "PostgreSQL",
+    "expat",
+    "Netherlands",
+    "Dutch housing",
+    "buyers agent",
+    "makelaar",
+    "home buying",
+    "mortgage calculator",
+    "30% ruling",
   ],
-  authors: [{ name: "Leon van Zyl" }],
-  creator: "Leon van Zyl",
+  authors: [{ name: "Makelaar Match" }],
+  creator: "Makelaar Match",
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "Agentic Coding Boilerplate",
-    title: "Agentic Coding Boilerplate",
+    siteName: "Makelaar Match",
+    title: "Makelaar Match | Find Your Dutch Home",
     description:
-      "Complete agentic coding boilerplate with authentication, database, AI integration, and modern tooling",
+      "The expat-first platform for buying your Dutch home. Connect with vetted local buyers' agents and navigate the Dutch housing market in English.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Agentic Coding Boilerplate",
+    title: "Makelaar Match | Find Your Dutch Home",
     description:
-      "Complete agentic coding boilerplate with authentication, database, AI integration, and modern tooling",
+      "The expat-first platform for buying your Dutch home. Connect with vetted local buyers' agents.",
   },
   robots: {
     index: true,
@@ -59,19 +65,19 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Agentic Coding Boilerplate",
+  name: "Makelaar Match",
   description:
-    "Complete agentic coding boilerplate with authentication, database, AI integration, and modern tooling",
-  applicationCategory: "DeveloperApplication",
+    "The expat-first platform for buying your Dutch home. Connect with vetted local buyers' agents and navigate the Dutch housing market in English.",
+  applicationCategory: "RealEstateApplication",
   operatingSystem: "Any",
   offers: {
     "@type": "Offer",
     price: "0",
-    priceCurrency: "USD",
+    priceCurrency: "EUR",
   },
   author: {
-    "@type": "Person",
-    name: "Leon van Zyl",
+    "@type": "Organization",
+    name: "Makelaar Match",
   },
 };
 
@@ -89,7 +95,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${jakartaSans.variable} antialiased`}
       >
         <ThemeProvider
           attribute="class"
