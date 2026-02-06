@@ -1,8 +1,19 @@
-# Agentic Coding Boilerplate - AI Assistant Guidelines
+# Makelaar - Expat Home Buying Platform
 
 ## Project Overview
 
-This is a Next.js 16 boilerplate for building AI-powered applications with authentication, database, and modern UI components.
+Platform helping expats find and buy homes in the Netherlands. Connects international home buyers with local buyers' agents and provides tools for property discovery, neighborhood intelligence, and financial planning.
+
+### Business Model
+- **Free for expats**: No cost to users
+- **Revenue**: Success fees from matched buyers' agents
+
+### Key Documentation
+- `docs/PRODUCT_ROADMAP.md` - Full feature roadmap and specifications
+- `docs/DATA_SOURCES.md` - All Dutch APIs and data sources reference
+- `docs/features/*.md` - Individual feature specifications
+
+## Tech Stack
 
 ### Tech Stack
 
@@ -248,3 +259,184 @@ This project uses **pnpm** (see `pnpm-lock.yaml`). When running commands:
 
 - Use `pnpm` instead of `npm` when possible
 - Scripts defined in package.json work with `pnpm run [script]`
+
+---
+
+## Makelaar Platform Architecture
+
+### Core Features
+
+| Feature | Route | Status |
+|---------|-------|--------|
+| Intake Form | `/intake` | Live |
+| Mortgage Calculator | `/calculator/mortgage` | Building |
+| Cost Calculator | `/calculator/costs` | Building |
+| School Finder | `/schools` | Building |
+| Property Search | `/properties` | Planned |
+| Neighborhood Explorer | `/neighborhoods` | Planned |
+
+### Database Schema (New Tables)
+
+```
+properties              # Scraped property listings
+├── id, external_id, source
+├── url, title, description, price
+├── address, city, postcode, lat/lng
+├── bedrooms, bathrooms, living_area_sqm
+├── property_type, year_built, energy_label
+├── photos[], status, listed_at
+└── timestamps
+
+user_saved_properties   # User watchlist
+├── id, user_id, property_id
+├── notes, viewing_date, rating
+└── timestamps
+
+property_alerts        # Notification preferences
+├── id, user_id, intake_profile_id
+├── regions[], min/max_price, min_bedrooms
+├── property_types[], frequency
+└── is_active, timestamps
+
+neighborhoods          # Area data + scores
+├── id, name, city, slug
+├── expat_density_score, english_friendly_score
+├── safety_score, family_friendly_score
+├── avg_price_sqm, avg_rent_price
+└── timestamps
+
+schools               # International schools
+├── id, name, curriculum, grades
+├── address, lat/lng, tuition_annual
+├── website, waiting_list_months
+└── timestamps
+```
+
+### API Endpoints (New)
+
+**Calculators:**
+- `POST /api/calculator/mortgage` - Calculate max mortgage
+- `POST /api/calculator/costs` - Calculate total buying costs
+
+**Properties:**
+- `GET /api/properties` - List/search properties
+- `GET /api/properties/[id]` - Property detail
+- `GET/POST /api/properties/saved` - User watchlist
+- `POST /api/alerts` - Create property alert
+
+**Neighborhoods:**
+- `GET /api/neighborhoods` - List neighborhoods
+- `GET /api/neighborhoods/[slug]` - Neighborhood detail
+
+**Schools:**
+- `GET /api/schools` - List/search schools
+
+### Data Sources (External APIs)
+
+| Source | Use | Access |
+|--------|-----|--------|
+| CBS Open Data | Demographics, income | Free API |
+| Kadaster BAG | Property data | Free API (limited) |
+| WOZ Waardeloket | Property valuations | Web scraping |
+| NS API | Train stations | Free (register) |
+| Google Maps | Commute times | Paid (free tier) |
+| Overpass | Amenities | Free |
+
+See `docs/DATA_SOURCES.md` for full documentation.
+
+### Component Organization (New)
+
+```
+src/components/
+├── calculators/           # Financial calculators
+│   ├── mortgage-form.tsx
+│   ├── mortgage-results.tsx
+│   ├── cost-form.tsx
+│   └── cost-breakdown.tsx
+├── properties/            # Property search & display
+│   ├── property-card.tsx
+│   ├── property-filters.tsx
+│   ├── property-map.tsx
+│   └── save-button.tsx
+├── neighborhoods/         # Neighborhood explorer
+│   ├── neighborhood-card.tsx
+│   ├── score-badges.tsx
+│   └── neighborhood-map.tsx
+└── schools/              # School finder
+    ├── school-card.tsx
+    └── school-filters.tsx
+```
+
+### Mortgage Calculator Logic (Dutch Rules)
+
+```typescript
+// Key factors for expat mortgages:
+// 1. Max LTV: 100% (no down payment required)
+// 2. Income multiplier: ~4.5x gross annual
+// 3. 30% ruling: Increases net income significantly
+// 4. Temporary contracts: Reduce borrowing capacity
+// 5. NHG (National Mortgage Guarantee): Up to €435,000
+
+function calculateMaxMortgage(input: {
+  grossAnnualSalary: number;
+  has30PercentRuling: boolean;
+  contractType: 'permanent' | 'temporary' | 'self_employed';
+  partnerIncome?: number;
+}) {
+  // Simplified calculation
+  let effectiveIncome = input.grossAnnualSalary;
+
+  if (input.has30PercentRuling) {
+    effectiveIncome = effectiveIncome * 1.3; // 30% tax-free
+  }
+
+  if (input.contractType === 'temporary') {
+    effectiveIncome = effectiveIncome * 0.8; // 20% reduction
+  }
+
+  const multiplier = 4.5;
+  return effectiveIncome * multiplier;
+}
+```
+
+### Total Cost Calculator (Dutch Fees)
+
+| Cost | Amount | Notes |
+|------|--------|-------|
+| Transfer tax | 0% / 2% / 10.4% | First-time (<€510k) / Regular / Investor |
+| Notary | €1,500-2,500 | Deed transfer + mortgage deed |
+| Valuation | €500-800 | Required for mortgage |
+| Mortgage advisor | €2,000-3,500 | Optional but recommended |
+| Buyers' agent | 1-2% of price | Optional |
+| Building inspection | €300-500 | Highly recommended |
+| Bank guarantee | €250-500 | Alternative to 10% deposit |
+| NHG fee | 0.6% | If mortgage ≤ €435k |
+
+### Key Business Logic
+
+**Intake Flow:**
+1. User lands on homepage
+2. Completes quick intake (email, regions, budget, timeline)
+3. Profile stored in `intake_profiles`
+4. Matched with buyers' agents (manual process currently)
+5. Agents contact user directly
+
+**Property Alert Flow:**
+1. User saves search criteria
+2. Stored in `property_alerts`
+3. Cron job checks for new matching properties
+4. Email sent via Resend/SendGrid
+
+### Environment Variables (New)
+
+```env
+# Google Maps (commute calculator)
+GOOGLE_MAPS_API_KEY=
+
+# Email alerts
+RESEND_API_KEY=
+
+# External APIs (optional)
+NS_API_KEY=
+KADASTER_API_KEY=
+```
